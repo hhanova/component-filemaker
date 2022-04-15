@@ -1,1 +1,115 @@
-{}
+{
+  "title": "Query Configuration",
+  "type": "object",
+  "required": [
+    "layout_name",
+    "loading_options"
+  ],
+  "properties": {
+    "layout_name": {
+      "title": "FileMaker layout name",
+      "type": "string",
+      "propertyOrder": 2
+    },
+    "query": {
+      "type": "array",
+      "options": {
+        "dependencies": {
+          "endpoint": "Search analytics"
+        }
+      },
+      "format": "table",
+      "title": "Query Group",
+      "propertyOrder": 10,
+      "description": "Groups of filter criteria. 'OR' logical operation is applied to each group. 'AND' logical operation is applied to each set of queries.",
+      "items": {
+        "type": "array",
+        "title": "Query Group",
+        "minItems": 1,
+        "format": "table",
+        "propertyOrder": 11,
+        "items": {
+          "type": "object",
+          "title": "Query",
+          "properties": {
+            "field_name": {
+              "title": "Field Name",
+              "type": "string",
+              "propertyOrder": 15
+            },
+            "find_criteria": {
+              "type": "string",
+              "title": "Find Criteria",
+              "propertyOrder": 30
+            }
+          }
+        }
+      }
+    },
+    "loading_options": {
+      "type": "object",
+      "title": "Loading Options",
+      "propertyOrder": 100,
+      "required": [
+        "incremental"
+      ],
+      "properties": {
+        "incremental_field": {
+          "type": "string",
+          "title": "Incremental Field",
+          "default": "_Timestamp_Modified",
+          "description": "FileMaker object timestamp field to use for incremental fetching.",
+          "propertyOrder": 300,
+          "options": {
+            "dependencies": {
+              "incremental": 1,
+              "incremental_fetch": true
+            }
+          }
+        },
+        "pkey": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "title": "Primary key column"
+          },
+          "default": [
+            "Id"
+          ],
+          "title": "Primary key",
+          "propertyOrder": 5000
+        },
+        "incremental_fetch": {
+          "title": "Incremental fetch",
+          "type": "boolean",
+          "format": "checkbox",
+          "default": false,
+          "description": "Fetch records that have been updated since the last run of the component with a specified field",
+          "propertyOrder": 250,
+          "options": {
+            "dependencies": {
+              "incremental": 1
+            }
+          }
+        },
+        "incremental": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ],
+          "options": {
+            "enum_titles": [
+              "Full Load",
+              "Incremental Update"
+            ]
+          },
+          "default": 0,
+          "title": "Load type",
+          "description": "If set to Incremental update, the result tables will be updated based on primary key and new records will be fetched. Full load overwrites the destination table each time.",
+          "propertyOrder": 200
+        }
+      }
+    }
+  }
+}

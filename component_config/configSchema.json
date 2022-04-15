@@ -1,17 +1,34 @@
 {
   "type": "object",
-  "title": "extractor configuration",
+  "title": "FileMaker Credentials",
+  "format": "table",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "required": [
-    "print_hello"
+    "username",
+    "#password",
+    "database"
   ],
   "properties": {
-    "print_hello": {
-      "type": "boolean",
-      "title": "Print Hello"
+    "username": {
+      "type": "string",
+      "title": "User Name",
+      "default": "",
+      "minLength": 1,
+      "propertyOrder": 10
     },
-    "debug": {
-      "type": "boolean",
-      "title": "Debug"
+    "#password": {
+      "type": "string",
+      "title": "Password",
+      "format": "password",
+      "default": "",
+      "minLength": 1,
+      "propertyOrder": 20
+    },
+    "database": {
+      "title": "Database",
+      "type": "string",
+      "description" : "FileMaker database name",
+      "propertyOrder": 30
     }
   }
 }
