@@ -227,6 +227,8 @@ class Component(ComponentBase):
     @lru_cache(10)
     def _build_table_definition(self, table_name: str):
         primary_key = self.configuration.parameters['loading_options'].get('pkey', [])
+        # normalize
+        primary_key = HeaderNormalizer.normalize_columns(primary_key)
         incremental = self.configuration.parameters['loading_options'].get('incremental', False)
         return self.create_out_table_definition(f'{table_name}.csv', primary_key=primary_key, incremental=incremental)
 
