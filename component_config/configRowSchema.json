@@ -40,6 +40,9 @@
             "find_criteria": {
               "type": "string",
               "title": "Find Criteria",
+              "options": {
+                "input_width": "450px"
+              },
               "propertyOrder": 30
             }
           }

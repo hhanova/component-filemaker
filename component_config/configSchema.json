@@ -9,6 +9,13 @@
     "database"
   ],
   "properties": {
+    "base_url": {
+      "type": "string",
+      "title": "Host URL of the FileMaker server.",
+      "default": "",
+      "minLength": 1,
+      "propertyOrder": 1
+    },
     "username": {
       "type": "string",
       "title": "User Name",
@@ -27,7 +34,7 @@
     "database": {
       "title": "Database",
       "type": "string",
-      "description" : "FileMaker database name",
+      "description": "FileMaker database name",
       "propertyOrder": 30
     }
   }
