@@ -99,7 +99,7 @@ class Component(ComponentBase):
 
         self._client = DataApiClient(self.configuration.parameters[KEY_BASEURL],
                                      self.configuration.parameters[KEY_DATABASE],
-                                     ssl_verify=False)
+                                     ssl_verify=self.configuration.parameters.get('ssl_verify', True))
         state = self.get_state_file() or {}
         self._layout_schemas: dict = state.get('table_schemas') or {}
         self._writer_cache: Dict[str, WriterCacheEntry] = {}
