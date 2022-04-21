@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import List, Dict
 
+import urllib3
 from keboola.component.base import ComponentBase
 from keboola.component.dao import TableDefinition
 from keboola.component.exceptions import UserException
@@ -108,6 +109,9 @@ class Component(ComponentBase):
         if not self._current_state.get('previous_run_values'):
             self._current_state['previous_run_values'] = {}
 
+        # suppress ssl warnings and rather log once
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     def run(self):
         """
         Main execution code
@@ -118,6 +122,9 @@ class Component(ComponentBase):
 
         self._client.login(params[KEY_USERNAME], params[KEY_PASSWORD])
         self._init_state()
+        if not params.get('ssl_verify', True):
+            logging.warning("SSL certificate verification is disabled!")
+
         try:
             self._download_layout_data()
             result_tables = self._close_writers()
