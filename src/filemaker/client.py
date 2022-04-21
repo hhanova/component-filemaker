@@ -1,7 +1,10 @@
 from typing import Tuple, List, Iterator
 
+import requests
 from keboola.http_client import HttpClient
 from requests import HTTPError
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 
 class ClientUserError(Exception):
@@ -63,10 +66,15 @@ class DataApiClient(HttpClient):
         Returns: Iterator of response data pages.
 
         """
-        json_data = {"query": query}
+        json_data = {}
+        if query:
+            json_data["query"]: query
 
         endpoint = f'layouts/{layout}/_find'
-        return self._get_paged_result_pages(endpoint, json_data, limit=1000)
+        try:
+            return self._get_paged_result_pages(endpoint, json_data, limit=1000)
+        except HTTPError as e:
+            raise ClientUserError(f'Failed to perform find request. Detail: {e.response.text}')
 
     def _get_paged_result_pages(self, endpoint: str,
                                 json_data: dict,
@@ -100,3 +108,20 @@ class DataApiClient(HttpClient):
                 has_more = False
 
             yield response_data['data'], response_data['dataInfo']
+
+    # override to continue on failure
+    def _requests_retry_session(self, session=None):
+        session = session or requests.Session()
+        retry = Retry(
+            total=self.max_retries,
+            read=self.max_retries,
+            connect=self.max_retries,
+            backoff_factor=self.backoff_factor,
+            status_forcelist=self.status_forcelist,
+            allowed_methods=self.allowed_methods,
+            raise_on_status=False
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
