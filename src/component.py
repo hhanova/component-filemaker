@@ -202,8 +202,9 @@ class Component(ComponentBase):
 
         logging.info(f'Fetching data for layout "{layout_name}", filter: {query_list}')
 
+        pagination_limit = self.configuration.parameters.get('page_size', 1000)
         count = 1
-        for data_page, data_info in self._client.find_records(layout_name, query_list):
+        for data_page, data_info in self._client.find_records(layout_name, query_list, pagination_limit):
             page_size = len(data_page)
             logging.info(f'Downloading records {count} - {count + page_size}')
             count += page_size

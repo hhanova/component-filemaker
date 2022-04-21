@@ -55,13 +55,14 @@ class DataApiClient(HttpClient):
         """
         self.delete(f'sessions/{self._current_session_token}', verify=self._ssl_verify)
 
-    def find_records(self, layout: str, query: List[dict]) -> Iterator[Tuple[List[dict], dict]]:
+    def find_records(self, layout: str, query: List[dict], page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
         """
 
         Args:
             layout (str): Layout name
             query (List[dict]: List of find queries, e.g.  [{"_Timestamp_Modified":">= 4/11/2022"}].
             Each dictionary is logical OR. Each property in the dictionary is evaluated as logical AND
+            page_size:
 
         Returns: Iterator of response data pages.
 
@@ -71,7 +72,7 @@ class DataApiClient(HttpClient):
             json_data["query"] = query
 
         endpoint = f'layouts/{layout}/_find'
-        return self._get_paged_result_pages(endpoint, json_data, limit=1000)
+        return self._get_paged_result_pages(endpoint, json_data, limit=page_size)
 
     def _handle_http_error(self, response):
 
