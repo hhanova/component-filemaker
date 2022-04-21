@@ -161,7 +161,7 @@ class Component(ComponentBase):
         field_name = self.configuration.parameters.get('loading_options', {}).get('incremental_field')
         previous_value = self._get_last_max_timestamp_value(layout_name, field_name)
         if previous_value:
-            query_list.append({field_name: previous_value})
+            query_list.append({field_name: f'>= {previous_value}'})
 
         return field_name
 

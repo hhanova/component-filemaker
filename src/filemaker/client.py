@@ -68,12 +68,16 @@ class DataApiClient(HttpClient):
         """
         json_data = {}
         if query:
-            json_data["query"]: query
+            json_data["query"] = query
 
         endpoint = f'layouts/{layout}/_find'
+        return self._get_paged_result_pages(endpoint, json_data, limit=1000)
+
+    def _handle_http_error(self, response):
+
         try:
-            return self._get_paged_result_pages(endpoint, json_data, limit=1000)
-        except HTTPError as e:
+            response.raise_for_status()
+        except requests.HTTPError as e:
             raise ClientUserError(f'Failed to perform find request. Detail: {e.response.text}')
 
     def _get_paged_result_pages(self, endpoint: str,
@@ -98,7 +102,7 @@ class DataApiClient(HttpClient):
             json_data['limit'] = limit
 
             response = self.post_raw(endpoint, json=json_data, params=parameters, verify=self._ssl_verify)
-            response.raise_for_status()
+            self._handle_http_error(response)
             response_data = response.json().get('response', {})
 
             if response_data.get('data', []):
