@@ -60,7 +60,7 @@ class DataApiClient(HttpClient):
 
         Args:
             layout (str): Layout name
-            query (List[dict]: List of find queries, e.g.  [{"_Timestamp_Modified":">= 4/11/2022"}].
+            query (List[dict]: List of find queries, e.g.  [{"_Timestamp_Modified":">= 4/11/2022"}]. Required parameter.
             Each dictionary is logical OR. Each property in the dictionary is evaluated as logical AND
             page_size:
 
@@ -73,6 +73,33 @@ class DataApiClient(HttpClient):
 
         endpoint = f'layouts/{layout}/_find'
         return self._get_paged_result_pages(endpoint, json_data, limit=page_size)
+
+    def get_records(self, layout: str, page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
+        """
+        Get all layout records, paginated.
+        Args:
+            layout:
+            page_size:
+
+        Returns: Iterator of response data pages.
+
+        """
+        endpoint = f'layouts/{layout}/records'
+        has_more = True
+        parameters = {"_offset": 1, "_limit": page_size}
+        while has_more:
+
+            response = self.get_raw(endpoint, params=parameters, verify=self._ssl_verify)
+            self._handle_http_error(response)
+            response_data = response.json().get('response', {})
+
+            if response_data.get('data', []):
+                has_more = True
+                parameters['_offset'] += page_size
+            else:
+                has_more = False
+
+            yield response_data['data'], response_data['dataInfo']
 
     def _handle_http_error(self, response):
 

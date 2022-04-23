@@ -159,8 +159,9 @@ class Component(ComponentBase):
 
         """
         field_name = self.configuration.parameters.get('loading_options', {}).get('incremental_field')
+        incremental_fetching = self.configuration.parameters.get('loading_options', {}).get('incremental_fetch')
         previous_value = self._get_last_max_timestamp_value(layout_name, field_name)
-        if previous_value:
+        if incremental_fetching and previous_value:
             query_list.append({field_name: f'>= {previous_value}'})
 
         return field_name
@@ -203,8 +204,15 @@ class Component(ComponentBase):
         logging.info(f'Fetching data for layout "{layout_name}", filter: {query_list}')
 
         pagination_limit = self.configuration.parameters.get('page_size', 1000)
+
+        # when the query is empty, list records without filter
+        if not query_list:
+            response_iterator = self._client.get_records(layout_name, pagination_limit)
+        else:
+            response_iterator = self._client.find_records(layout_name, query_list, pagination_limit)
+
         count = 1
-        for data_page, data_info in self._client.find_records(layout_name, query_list, pagination_limit):
+        for data_page, data_info in response_iterator:
             page_size = len(data_page)
             logging.info(f'Downloading records {count} - {count + page_size}')
             count += page_size
