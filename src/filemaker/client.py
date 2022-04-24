@@ -93,7 +93,7 @@ class DataApiClient(HttpClient):
             self._handle_http_error(response)
             response_data = response.json().get('response', {})
 
-            if response_data.get('data', []):
+            if response_data['dataInfo']['returnedCount'] == page_size:
                 has_more = True
                 parameters['_offset'] += page_size
             else:

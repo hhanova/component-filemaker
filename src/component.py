@@ -130,7 +130,7 @@ class Component(ComponentBase):
             result_tables = self._close_writers()
             self._current_state['table_schemas'] = self._layout_schemas
             self.write_state_file(self._current_state)
-            self.write_tabledef_manifests(result_tables)
+            self.write_manifests(result_tables)
         finally:
             self._client.logout()
 
