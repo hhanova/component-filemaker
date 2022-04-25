@@ -31,35 +31,34 @@ class DataApiClient(HttpClient):
         super().__init__(base_url=base_url, max_retries=max_retries, backoff_factor=backoff_factor,
                          status_forcelist=status_forcelist)
 
-    def login_to_database(self, database: str):
+    def login_to_database_session(self, database: str):
         """
         Login and open FileMaker DataApi session. Remember to call the logout method, otherwise the session is closed
         automatically after 15 min of inactivity.
         Args:
             database:
 
-        Returns:
+        Returns: session_token
 
         """
         try:
-            response = self.post_raw(f'databases/{database}/sessions', json={}, auth=(user, password),
+            response = self.post_raw(f'databases/{database}/sessions', json={}, auth=(self._user, self._password),
                                      verify=self._ssl_verify)
             response.raise_for_status()
             token = response.json()['response']['token']
-            self._current_session_token = token
-            self._auth_header = {"Authorization": f'Bearer {token}'}
-            self._current_database = database
+            return token
         except HTTPError as e:
-            raise ClientUserError('Failed to login! Please verify your user name and password or database name.',
-                                  e.response.text) from e
+            raise ClientUserError(
+                f'Failed to login to database {database}! Please verify your user name and password or database name.',
+                e.response.text) from e
 
-    def logout(self):
+    def logout_from_database_session(self, database: str, session_token: str):
         """
         Performs logout from current session
         Returns:
 
         """
-        self.delete(f'databases/{self._current_database}/sessions/{self._current_session_token}',
+        self.delete(f'databases/{database}/sessions/{session_token}',
                     verify=self._ssl_verify)
 
     def find_records(self, database: str, layout: str, query: List[dict], page_size=1000) -> Iterator[
@@ -77,7 +76,8 @@ class DataApiClient(HttpClient):
 
         """
 
-        self.login_to_database()
+        session_key = self.login_to_database_session(database)
+        auth_header = {"Authorization": f'Bearer {session_key}'}
         json_data = {}
         if query:
             json_data["query"] = query
@@ -86,50 +86,88 @@ class DataApiClient(HttpClient):
 
         has_more = True
         json_data['offset'] = 1
-        while has_more:
-            json_data['limit'] = page_size
+        try:
+            while has_more:
+                json_data['limit'] = page_size
 
-            response = self.post_raw(endpoint, json=json_data, verify=self._ssl_verify)
-            self._handle_http_error(response)
-            response_data = response.json().get('response', {})
+                response = self.post_raw(endpoint, json=json_data, verify=self._ssl_verify, headers=auth_header)
+                self._handle_http_error(response)
+                response_data = response.json().get('response', {})
 
-            if response_data.get('data', []):
-                has_more = True
-                json_data['offset'] += page_size
-            else:
-                has_more = False
+                if response_data.get('data', []):
+                    has_more = True
+                    json_data['offset'] += page_size
+                else:
+                    has_more = False
 
-            yield response_data['data'], response_data['dataInfo']
+                yield response_data['data'], response_data['dataInfo']
+        finally:
+            self.logout_from_database_session(database, session_key)
 
-    def get_records(self, layout: str, page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
+    def get_records(self, database: str, layout: str, page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
         """
         Get all layout records, paginated.
         Args:
+            database: database name
             layout:
             page_size:
 
         Returns: Iterator of response data pages.
 
         """
-        endpoint = f'layouts/{layout}/records'
+        session_key = self.login_to_database_session(database)
+        auth_header = {"Authorization": f'Bearer {session_key}'}
+
+        endpoint = f'databases/{database}layouts/{layout}/records'
         has_more = True
         parameters = {"_offset": 1, "_limit": page_size}
-        while has_more:
+        try:
+            while has_more:
 
-            response = self.get_raw(endpoint, params=parameters, verify=self._ssl_verify)
+                response = self.get_raw(endpoint, params=parameters, verify=self._ssl_verify, headers=auth_header)
+                self._handle_http_error(response)
+                response_data = response.json().get('response', {})
+
+                if response_data['dataInfo']['returnedCount'] == page_size:
+                    has_more = True
+                    parameters['_offset'] += page_size
+                else:
+                    has_more = False
+
+                yield response_data['data'], response_data['dataInfo']
+        finally:
+            self.logout_from_database_session(database, session_key)
+
+    def get_database_names(self) -> List[str]:
+        """
+        Get all available database names for the logged-in user.
+        Returns:
+
+        """
+        response = self.get_raw('databases', auth=(self._user, self._password))
+        self._handle_http_error(response)
+        response_data = response.json().get('response', {})
+        return [record.get('name') for record in response_data['databases']]
+
+    def get_layouts(self, database: str) -> List[dict]:
+        """
+        Get available layouts for the database
+        Args:
+            database: database name
+
+        Returns:
+
+        """
+        session_key = self.login_to_database_session(database)
+        auth_header = {"Authorization": f'Bearer {session_key}'}
+        endpoint = f'databases/{database}layouts'
+        try:
+            response = self.get_raw(endpoint, auth=(self._user, self._password), headers=auth_header)
             self._handle_http_error(response)
             response_data = response.json().get('response', {})
-
-            if response_data['dataInfo']['returnedCount'] == page_size:
-                has_more = True
-                parameters['_offset'] += page_size
-            else:
-                has_more = False
-
-            yield response_data['data'], response_data['dataInfo']
-
-    def get_database_names(self):
-        self.get_raw('databases')
+            return response_data.get('layouts', [])
+        finally:
+            self.logout_from_database_session(database, session_key)
 
     def _handle_http_error(self, response):
 
