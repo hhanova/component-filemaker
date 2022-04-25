@@ -5,8 +5,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "required": [
     "username",
-    "#password",
-    "database"
+    "#password"
   ],
   "properties": {
     "base_url": {
@@ -30,12 +29,6 @@
       "default": "",
       "minLength": 1,
       "propertyOrder": 20
-    },
-    "database": {
-      "title": "Database",
-      "type": "string",
-      "description": "FileMaker database name",
-      "propertyOrder": 30
     },
     "ssl_verify": {
       "title": "Verify SSL certificate.",

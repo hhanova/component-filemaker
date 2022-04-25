@@ -120,7 +120,7 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
 
-        self._client.login(params[KEY_USERNAME], params[KEY_PASSWORD])
+        self._client.login_to_database(params[KEY_USERNAME], params[KEY_PASSWORD])
         self._init_state()
         if not params.get('ssl_verify', True):
             logging.warning("SSL certificate verification is disabled!")

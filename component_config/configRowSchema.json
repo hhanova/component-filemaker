@@ -2,20 +2,47 @@
   "title": "Query Configuration",
   "type": "object",
   "required": [
+    "database",
     "layout_name",
     "loading_options"
   ],
   "properties": {
+    "query_type_selector": {
+      "title": "Query type",
+      "type": "string",
+      "enum": [
+        "Metadata",
+        "Layout"
+      ],
+      "default": "Layout",
+      "propertyOrder": 1
+    },
+    "database": {
+      "title": "Database",
+      "type": "string",
+      "description": "FileMaker database name",
+      "options": {
+        "dependencies": {
+          "query_type_selector": "Layout"
+        }
+      },
+      "propertyOrder": 3
+    },
     "layout_name": {
       "title": "FileMaker layout name",
       "type": "string",
-      "propertyOrder": 2
+      "options": {
+        "dependencies": {
+          "query_type_selector": "Layout"
+        }
+      },
+      "propertyOrder": 5
     },
     "query": {
       "type": "array",
       "options": {
         "dependencies": {
-          "endpoint": "Search analytics"
+          "query_type_selector": "Layout"
         }
       },
       "format": "table",
@@ -66,7 +93,8 @@
           "options": {
             "dependencies": {
               "incremental": 1,
-              "incremental_fetch": true
+              "incremental_fetch": true,
+              "query_type_selector": "Layout"
             }
           }
         },
@@ -92,7 +120,8 @@
           "propertyOrder": 250,
           "options": {
             "dependencies": {
-              "incremental": 1
+              "incremental": 1,
+              "query_type_selector": "Layout"
             }
           }
         },
