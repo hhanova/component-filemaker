@@ -114,6 +114,12 @@
           "propertyOrder": 200
         }
       }
+    },
+    "page_size": {
+      "type": "integer",
+      "title": "Page size",
+      "default": 1000,
+      "propertyOrder": 60
     }
   }
 }

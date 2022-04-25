@@ -36,6 +36,14 @@
       "type": "string",
       "description": "FileMaker database name",
       "propertyOrder": 30
+    },
+    "ssl_verify": {
+      "title": "Verify SSL certificate.",
+      "type": "boolean",
+      "format": "checkbox",
+      "default": true,
+      "description": "Set to false to disable SSL (https) certificate verification. Use with caution.",
+      "propertyOrder": 30
     }
   }
 }
