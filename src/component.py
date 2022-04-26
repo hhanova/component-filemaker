@@ -261,7 +261,7 @@ class Component(ComponentBase):
             layouts_writer.writerows(layouts_data)
 
         field_metadata_filter = self.configuration.parameters.get('field_metadata', [])
-        layout_metadata_table = self.create_out_table_definition('layouts_metadata.csv', incremental=False)
+        layout_metadata_table = self.create_out_table_definition('layout_fields_metadata.csv', incremental=False)
         layout_metadata_writer = self._get_writer_from_cache(layout_metadata_table, layout_metadata_table.name)
         if field_metadata_filter:
             logging.info('Downloading available field schemas for specified layouts.')
