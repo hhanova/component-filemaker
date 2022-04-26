@@ -82,7 +82,7 @@ class DataApiClient(HttpClient):
         if query:
             json_data["query"] = query
 
-        endpoint = f'databases/{database}layouts/{layout}/_find'
+        endpoint = f'databases/{database}/layouts/{layout}/_find'
 
         has_more = True
         json_data['offset'] = 1
@@ -118,7 +118,7 @@ class DataApiClient(HttpClient):
         session_key = self.login_to_database_session(database)
         auth_header = {"Authorization": f'Bearer {session_key}'}
 
-        endpoint = f'databases/{database}layouts/{layout}/records'
+        endpoint = f'databases/{database}/layouts/{layout}/records'
         has_more = True
         parameters = {"_offset": 1, "_limit": page_size}
         try:

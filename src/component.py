@@ -198,6 +198,7 @@ class Component(ComponentBase):
 
         """
         layout_name = self.configuration.parameters[KEY_LAYOUT_NAME]
+        database_name = self.configuration.parameters[KEY_DATABASE]
 
         # build query
         query_list = self._build_queries()
@@ -209,9 +210,9 @@ class Component(ComponentBase):
 
         # when the query is empty, list records without filter
         if not query_list:
-            response_iterator = self._client.get_records(layout_name, pagination_limit)
+            response_iterator = self._client.get_records(database_name, layout_name, pagination_limit)
         else:
-            response_iterator = self._client.find_records(layout_name, query_list, pagination_limit)
+            response_iterator = self._client.find_records(database_name, layout_name, query_list, pagination_limit)
 
         count = 1
         for data_page, data_info in response_iterator:
