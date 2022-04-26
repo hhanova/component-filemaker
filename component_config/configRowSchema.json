@@ -2,9 +2,6 @@
   "title": "Query Configuration",
   "type": "object",
   "required": [
-    "database",
-    "layout_name",
-    "loading_options",
     "object_type"
   ],
   "properties": {
@@ -52,25 +49,24 @@
       "items": {
         "type": "object",
         "title": "Layout",
+        "format": "grid",
         "properties": {
           "database": {
             "title": "Database",
             "type": "string",
-            "description": "FileMaker database name",
+            "description": "FileMaker file/database name",
             "options": {
-              "dependencies": {
-                "object_type": "Layout"
-              }
+              "input_width": "450px"
             },
             "propertyOrder": 3
           },
           "layout_name": {
             "title": "FileMaker layout name",
             "type": "string",
+
+            "description": "FileMaker layout name",
             "options": {
-              "dependencies": {
-                "object_type": "Layout"
-              }
+              "input_width": "450px"
             },
             "propertyOrder": 5
           }

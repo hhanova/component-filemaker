@@ -119,13 +119,13 @@ class Component(ComponentBase):
 
         params = self.configuration.parameters
 
-        self._init_state()
         if not params.get('ssl_verify', True):
             logging.warning("SSL certificate verification is disabled!")
 
         if params.get('object_type', 'Layout') == 'Metadata':
             self._download_metadata()
         elif params.get('object_type', 'Layout') == 'Layout':
+            self._init_state()
             self.validate_configuration_parameters(REQUIRED_PARAMETERS)
             self._download_layout_data()
         else:
