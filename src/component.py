@@ -96,10 +96,10 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
-        self.validate_configuration_parameters([KEY_BASEURL, KEY_DATABASE])
-
+        self.validate_configuration_parameters([KEY_USERNAME, KEY_PASSWORD, KEY_BASEURL])
         self._client = DataApiClient(self.configuration.parameters[KEY_BASEURL],
-                                     self.configuration.parameters[KEY_DATABASE],
+                                     self.configuration.parameters[KEY_USERNAME],
+                                     self.configuration.parameters[KEY_PASSWORD],
                                      ssl_verify=self.configuration.parameters.get('ssl_verify', True))
         state = self.get_state_file() or {}
         self._layout_schemas: dict = state.get('table_schemas') or {}
@@ -117,22 +117,24 @@ class Component(ComponentBase):
         Main execution code
         """
 
-        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
 
-        self._client.login(params[KEY_USERNAME], params[KEY_PASSWORD])
-        self._init_state()
         if not params.get('ssl_verify', True):
             logging.warning("SSL certificate verification is disabled!")
 
-        try:
+        if params.get('object_type', 'Layout') == 'Metadata':
+            self._download_metadata()
+        elif params.get('object_type', 'Layout') == 'Layout':
+            self._init_state()
+            self.validate_configuration_parameters(REQUIRED_PARAMETERS)
             self._download_layout_data()
-            result_tables = self._close_writers()
-            self._current_state['table_schemas'] = self._layout_schemas
-            self.write_state_file(self._current_state)
-            self.write_manifests(result_tables)
-        finally:
-            self._client.logout()
+        else:
+            raise UserException(f"Invalid object type '{params['object_type']}'!")
+
+        result_tables = self._close_writers()
+        self._current_state['table_schemas'] = self._layout_schemas
+        self.write_state_file(self._current_state)
+        self.write_manifests(result_tables)
 
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):
@@ -239,6 +241,58 @@ class Component(ComponentBase):
                 single_query[q[KEY_FIELD_NAME]] = q[KEY_FIND_CRITERIA]
             query_list.append(single_query)
         return query_list
+
+    def _download_metadata(self):
+        """
+        Download available databases and layouts and field metadata
+
+        Returns:
+
+        """
+        logging.info('Downloading available databases and layouts')
+        layouts_table = self.create_out_table_definition('layouts.csv', incremental=False)
+
+        database_names = self._client.get_database_names()
+        layouts_writer = self._get_writer_from_cache(layouts_table, layouts_table.name)
+
+        for database in database_names:
+            layouts = self._client.get_layouts(database)
+            layouts_data = self._parse_layout_data(layouts, database)
+            layouts_writer.writerows(layouts_data)
+
+        field_metadata_filter = self.configuration.parameters.get('field_metadata', [])
+        layout_metadata_table = self.create_out_table_definition('layouts_metadata.csv', incremental=False)
+        layout_metadata_writer = self._get_writer_from_cache(layout_metadata_table, layout_metadata_table.name)
+        if field_metadata_filter:
+            logging.info('Downloading available field schemas for specified layouts.')
+        for field_f in field_metadata_filter:
+            layout_metadata = self._client.get_layout_field_metadata(field_f['database'], field_f['layout_name'])
+            layout_metadata_writer.writerows(
+                self._parse_layout_metadata(layout_metadata, field_f['database'], field_f['layout_name']))
+
+    def _parse_layout_metadata(self, layout_metadata: List[dict], database: str, layout_name: str):
+        for record in layout_metadata:
+            record['database_name'] = database
+            record['layout_name'] = layout_name
+            yield record
+
+    def _parse_layout_data(self, layouts: List[dict], database: str) -> List[dict]:
+        layout_records = []
+
+        for lo in layouts:
+            if lo.get('isFolder', False):
+                parent_layout_name = lo['name']
+                children = [
+                    {"database_name": database, "parent_layout_name": parent_layout_name, "layout_name": child['name'],
+                     "table": child.get('table', '')}
+                    for child in lo['folderLayoutNames']]
+                layout_records.extend(children)
+            else:
+                layout_records.append({"database_name": database,
+                                       "parent_layout_name": '',
+                                       "layout_name": lo["name"],
+                                       "table": lo['table']})
+        return layout_records
 
     @lru_cache(10)
     def _build_table_definition(self, table_name: str):

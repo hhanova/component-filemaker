@@ -2,20 +2,83 @@
   "title": "Query Configuration",
   "type": "object",
   "required": [
-    "layout_name",
-    "loading_options"
+    "object_type"
   ],
   "properties": {
+    "object_type": {
+      "title": "Object type",
+      "type": "string",
+      "enum": [
+        "Metadata",
+        "Layout"
+      ],
+      "default": "Layout",
+      "propertyOrder": 1
+    },
+    "database": {
+      "title": "Database",
+      "type": "string",
+      "description": "FileMaker database name",
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      },
+      "propertyOrder": 3
+    },
     "layout_name": {
       "title": "FileMaker layout name",
       "type": "string",
-      "propertyOrder": 2
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      },
+      "propertyOrder": 5
+    },
+    "field_metadata": {
+      "title": "Field Metadata",
+      "description": "Download schemas of selected layouts. If left empty only list of available databases and layouts is downloaded.",
+      "type": "array",
+      "format": "table",
+      "options": {
+        "dependencies": {
+          "object_type": "Metadata"
+        }
+      },
+      "items": {
+        "type": "object",
+        "title": "Layout",
+        "format": "grid",
+        "properties": {
+          "database": {
+            "title": "Database",
+            "type": "string",
+            "description": "FileMaker file/database name",
+            "options": {
+              "input_width": "450px"
+            },
+            "propertyOrder": 3
+          },
+          "layout_name": {
+            "title": "FileMaker layout name",
+            "type": "string",
+
+            "description": "FileMaker layout name",
+            "options": {
+              "input_width": "450px"
+            },
+            "propertyOrder": 5
+          }
+        }
+      },
+      "propertyOrder": 5
     },
     "query": {
       "type": "array",
       "options": {
         "dependencies": {
-          "endpoint": "Search analytics"
+          "object_type": "Layout"
         }
       },
       "format": "table",
@@ -56,6 +119,11 @@
       "required": [
         "incremental"
       ],
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      },
       "properties": {
         "incremental_field": {
           "type": "string",
@@ -92,7 +160,8 @@
           "propertyOrder": 250,
           "options": {
             "dependencies": {
-              "incremental": 1
+              "incremental": 1,
+              "object_type": "Layout"
             }
           }
         },
@@ -119,7 +188,12 @@
       "type": "integer",
       "title": "Page size",
       "default": 1000,
-      "propertyOrder": 60
+      "propertyOrder": 60,
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      }
     }
   }
 }
