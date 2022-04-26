@@ -4,11 +4,12 @@
   "required": [
     "database",
     "layout_name",
-    "loading_options"
+    "loading_options",
+    "object_type"
   ],
   "properties": {
-    "query_type_selector": {
-      "title": "Query type",
+    "object_type": {
+      "title": "Object type",
       "type": "string",
       "enum": [
         "Metadata",
@@ -23,7 +24,7 @@
       "description": "FileMaker database name",
       "options": {
         "dependencies": {
-          "query_type_selector": "Layout"
+          "object_type": "Layout"
         }
       },
       "propertyOrder": 3
@@ -33,7 +34,46 @@
       "type": "string",
       "options": {
         "dependencies": {
-          "query_type_selector": "Layout"
+          "object_type": "Layout"
+        }
+      },
+      "propertyOrder": 5
+    },
+    "field_metadata": {
+      "title": "Field Metadata",
+      "description": "Download schemas of selected layouts. If left empty only list of available.",
+      "type": "array",
+      "format": "table",
+      "options": {
+        "dependencies": {
+          "object_type": "Metadata"
+        }
+      },
+      "items": {
+        "type": "object",
+        "title": "Layout",
+        "properties": {
+          "database": {
+            "title": "Database",
+            "type": "string",
+            "description": "FileMaker database name",
+            "options": {
+              "dependencies": {
+                "object_type": "Layout"
+              }
+            },
+            "propertyOrder": 3
+          },
+          "layout_name": {
+            "title": "FileMaker layout name",
+            "type": "string",
+            "options": {
+              "dependencies": {
+                "object_type": "Layout"
+              }
+            },
+            "propertyOrder": 5
+          }
         }
       },
       "propertyOrder": 5
@@ -42,7 +82,7 @@
       "type": "array",
       "options": {
         "dependencies": {
-          "query_type_selector": "Layout"
+          "object_type": "Layout"
         }
       },
       "format": "table",
@@ -83,6 +123,11 @@
       "required": [
         "incremental"
       ],
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      },
       "properties": {
         "incremental_field": {
           "type": "string",
@@ -93,8 +138,7 @@
           "options": {
             "dependencies": {
               "incremental": 1,
-              "incremental_fetch": true,
-              "query_type_selector": "Layout"
+              "incremental_fetch": true
             }
           }
         },
@@ -121,7 +165,7 @@
           "options": {
             "dependencies": {
               "incremental": 1,
-              "query_type_selector": "Layout"
+              "object_type": "Layout"
             }
           }
         },
@@ -148,7 +192,12 @@
       "type": "integer",
       "title": "Page size",
       "default": 1000,
-      "propertyOrder": 60
+      "propertyOrder": 60,
+      "options": {
+        "dependencies": {
+          "object_type": "Layout"
+        }
+      }
     }
   }
 }

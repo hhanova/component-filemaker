@@ -61,8 +61,8 @@ class DataApiClient(HttpClient):
         self.delete(f'databases/{database}/sessions/{session_token}',
                     verify=self._ssl_verify)
 
-    def find_records(self, database: str, layout: str, query: List[dict], page_size=1000) -> Iterator[
-        Tuple[List[dict], dict]]:
+    def find_records(self, database: str, layout: str,
+                     query: List[dict], page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
         """
 
         Args:
@@ -144,7 +144,7 @@ class DataApiClient(HttpClient):
         Returns:
 
         """
-        response = self.get_raw('databases', auth=(self._user, self._password))
+        response = self.get_raw('databases', auth=(self._user, self._password), verify=self._ssl_verify)
         self._handle_http_error(response)
         response_data = response.json().get('response', {})
         return [record.get('name') for record in response_data['databases']]
@@ -160,12 +160,33 @@ class DataApiClient(HttpClient):
         """
         session_key = self.login_to_database_session(database)
         auth_header = {"Authorization": f'Bearer {session_key}'}
-        endpoint = f'databases/{database}layouts'
+        endpoint = f'databases/{database}/layouts'
         try:
-            response = self.get_raw(endpoint, auth=(self._user, self._password), headers=auth_header)
+            response = self.get_raw(endpoint, headers=auth_header, verify=self._ssl_verify)
             self._handle_http_error(response)
             response_data = response.json().get('response', {})
             return response_data.get('layouts', [])
+        finally:
+            self.logout_from_database_session(database, session_key)
+
+    def get_layout_field_metadata(self, database: str, layout: str) -> List[dict]:
+        """
+        Get layout field metadata
+        Args:
+            database: database name
+            layout: layout name
+
+        Returns:
+
+        """
+        session_key = self.login_to_database_session(database)
+        auth_header = {"Authorization": f'Bearer {session_key}'}
+        endpoint = f'databases/{database}/layouts/{layout}'
+        try:
+            response = self.get_raw(endpoint, headers=auth_header, verify=self._ssl_verify)
+            self._handle_http_error(response)
+            response_data = response.json().get('response', {})
+            return response_data.get('fieldMetaData', [])
         finally:
             self.logout_from_database_session(database, session_key)
 
