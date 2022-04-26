@@ -41,7 +41,7 @@
     },
     "field_metadata": {
       "title": "Field Metadata",
-      "description": "Download schemas of selected layouts. If left empty only list of available.",
+      "description": "Download schemas of selected layouts. If left empty only list of available databases and layouts is downloaded.",
       "type": "array",
       "format": "table",
       "options": {
