@@ -160,8 +160,7 @@
           "propertyOrder": 250,
           "options": {
             "dependencies": {
-              "incremental": 1,
-              "object_type": "Layout"
+              "incremental": 1
             }
           }
         },
