@@ -139,6 +139,9 @@ class Component(ComponentBase):
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):
             self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]] = {}
+        elif not self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]]:
+            # fix kbc bug converting obj to array
+            self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]] = {}
 
     def _get_last_max_timestamp_value(self, layout_name: str, field_name: str):
         """
@@ -151,7 +154,11 @@ class Component(ComponentBase):
 
         """
         state = self.get_state_file()
-        return state.get('previous_run_values', {}).get(layout_name, {}).get(field_name)
+        prev_run_values = state.get('previous_run_values', {})
+        if not prev_run_values.get(layout_name, {}):
+            # fix kbc bug converting obj to array
+            prev_run_values[layout_name] = {}
+        return prev_run_values.get(layout_name, {}).get(field_name)
 
     def _apply_incremental_fetching(self, layout_name: str, query_list: List[dict]):
         """
