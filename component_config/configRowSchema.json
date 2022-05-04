@@ -63,7 +63,6 @@
           "layout_name": {
             "title": "FileMaker layout name",
             "type": "string",
-
             "description": "FileMaker layout name",
             "options": {
               "input_width": "450px"
@@ -125,18 +124,25 @@
         }
       },
       "properties": {
-        "incremental_field": {
-          "type": "string",
-          "title": "Incremental Field",
-          "default": "_Timestamp_Modified",
-          "description": "FileMaker object timestamp field to use for incremental fetching.",
-          "propertyOrder": 300,
+        "incremental_fields": {
+          "title": "Incremental Fields",
+          "description": "List of column names to use for incremental fetching.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "title": "Field Name",
+            "propertyOrder": 300
+          },
+          "default": [
+            "_Timestamp_Modified"
+          ],
           "options": {
             "dependencies": {
               "incremental": 1,
               "incremental_fetch": true
             }
-          }
+          },
+          "propertyOrder": 300
         },
         "pkey": {
           "type": "array",
@@ -160,8 +166,7 @@
           "propertyOrder": 250,
           "options": {
             "dependencies": {
-              "incremental": 1,
-              "object_type": "Layout"
+              "incremental": 1
             }
           }
         },
