@@ -1,3 +1,4 @@
+import json
 from typing import Tuple, List, Iterator
 
 import requests
@@ -62,7 +63,7 @@ class DataApiClient(HttpClient):
                     verify=self._ssl_verify)
 
     def find_records(self, database: str, layout: str,
-                     query: List[dict], page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
+                     query: List[dict], page_size=1000, sort: List[dict] = None) -> Iterator[Tuple[List[dict], dict]]:
         """
 
         Args:
@@ -71,6 +72,7 @@ class DataApiClient(HttpClient):
             query (List[dict]: List of find queries, e.g.  [{"_Timestamp_Modified":">= 4/11/2022"}]. Required parameter.
             Each dictionary is logical OR. Each property in the dictionary is evaluated as logical AND
             page_size:
+            sort: sort expression
 
         Returns: Iterator of response data pages.
 
@@ -81,6 +83,9 @@ class DataApiClient(HttpClient):
         json_data = {}
         if query:
             json_data["query"] = query
+
+        if sort:
+            json_data['sort'] = sort
 
         endpoint = f'databases/{database}/layouts/{layout}/_find'
 
@@ -104,13 +109,15 @@ class DataApiClient(HttpClient):
         finally:
             self.logout_from_database_session(database, session_key)
 
-    def get_records(self, database: str, layout: str, page_size=1000) -> Iterator[Tuple[List[dict], dict]]:
+    def get_records(self, database: str, layout: str, page_size=1000,
+                    sort: List[dict] = None) -> Iterator[Tuple[List[dict], dict]]:
         """
         Get all layout records, paginated.
         Args:
             database: database name
             layout:
             page_size:
+            sort: sort expression
 
         Returns: Iterator of response data pages.
 
@@ -121,6 +128,8 @@ class DataApiClient(HttpClient):
         endpoint = f'databases/{database}/layouts/{layout}/records'
         has_more = True
         parameters = {"_offset": 1, "_limit": page_size}
+        if sort:
+            parameters['_sort'] = json.dumps(sort)
         try:
             while has_more:
 

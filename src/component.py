@@ -4,7 +4,6 @@ Template Component main class.
 """
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from functools import lru_cache
 from typing import List, Dict
 
@@ -143,9 +142,9 @@ class Component(ComponentBase):
             # fix kbc bug converting obj to array
             self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]] = {}
 
-    def _get_last_max_timestamp_value(self, layout_name: str, field_name: str):
+    def _get_last_values(self, layout_name: str, field_names: List[str]) -> Dict:
         """
-        Retrieves max timetamp value from previous execution for this layout
+        Retrieves max incremental fetching value from previous execution for this layout
         Args:
             layout_name:
             field_name:
@@ -158,7 +157,12 @@ class Component(ComponentBase):
         if not prev_run_values.get(layout_name, {}):
             # fix kbc bug converting obj to array
             prev_run_values[layout_name] = {}
-        return prev_run_values.get(layout_name, {}).get(field_name)
+        last_values = {}
+        for field in field_names:
+            prev_value = prev_run_values.get(layout_name, {}).get(field)
+            if prev_value:
+                last_values[field] = prev_run_values.get(layout_name, {}).get(field)
+        return last_values
 
     def _apply_incremental_fetching(self, layout_name: str, query_list: List[dict]):
         """
@@ -167,36 +171,47 @@ class Component(ComponentBase):
         Returns:
 
         """
-        field_name = self.configuration.parameters.get('loading_options', {}).get('incremental_field')
+        field_names = self.configuration.parameters.get('loading_options', {}).get('incremental_fields', [])
         incremental_fetching = self.configuration.parameters.get('loading_options', {}).get('incremental_fetch')
-        previous_value = self._get_last_max_timestamp_value(layout_name, field_name)
-        if incremental_fetching and previous_value:
-            query_list.append({field_name: f'>= {previous_value}'})
+        previous_values = self._get_last_values(layout_name, field_names)
+        query = {}
+        if incremental_fetching and previous_values:
+            for field_name, previous_value in previous_values.items():
+                query[field_name] = f'>= {previous_value}'
+            query_list.append(query)
 
-        return field_name
+        return field_names
 
-    def _store_max_timestamp_value(self, layout_name: str, row: dict, field_name: str):
+    def _build_sort_expression(self):
+        field_names = self.configuration.parameters.get('loading_options', {}).get('incremental_fields')
+        incremental_fetching = self.configuration.parameters.get('loading_options', {}).get('incremental_fetch')
+        sort = []
+        if incremental_fetching and field_names:
+            for field in field_names:
+                sort.append({'fieldName': field})
+        return sort
+
+    def _store_max_value(self, layout_name: str, row: dict, field_names: List[str]):
         """
         Stores max timestamp value from the row based on previous call of this method.
         Args:
             layout_name:
             row:
-            field_name:
+            field_names:
 
         Returns:
 
         """
-        if not field_name:
+        if not field_names or not row:
             return
 
-        last_timestamp_str = self._current_state.get('previous_run_values', {}).get(
-            layout_name, {}).get(field_name) or '01/01/2000 00:00:00'
-        last_timestamp = datetime.strptime(last_timestamp_str, TIMESTAMP_FORMAT)
+        for field_name in field_names:
+            last_value = self._current_state.get('previous_run_values', {}).get(
+                layout_name, {}).get(field_name)
 
-        timestamp = datetime.strptime(row[field_name], TIMESTAMP_FORMAT)
-        datetime.strptime(row[field_name], TIMESTAMP_FORMAT)
-        if timestamp > last_timestamp:
-            self._current_state['previous_run_values'][layout_name][field_name] = timestamp.strftime(TIMESTAMP_FORMAT)
+            current_value = row[field_name]
+            if not last_value or current_value > last_value:
+                self._current_state['previous_run_values'][layout_name][field_name] = current_value
 
     def _download_layout_data(self):
         """
@@ -209,17 +224,20 @@ class Component(ComponentBase):
 
         # build query
         query_list = self._build_queries()
-        fetching_field = self._apply_incremental_fetching(layout_name, query_list)
+        fetching_fields = self._apply_incremental_fetching(layout_name, query_list)
 
-        logging.info(f'Fetching data for layout "{layout_name}", filter: {query_list}')
+        sort_expression = self._build_sort_expression()
+
+        logging.info(f'Fetching data for layout "{layout_name}", filter: {query_list}, sort: {sort_expression}')
 
         pagination_limit = self.configuration.parameters.get('page_size', 1000)
 
         # when the query is empty, list records without filter
         if not query_list:
-            response_iterator = self._client.get_records(database_name, layout_name, pagination_limit)
+            response_iterator = self._client.get_records(database_name, layout_name, pagination_limit, sort_expression)
         else:
-            response_iterator = self._client.find_records(database_name, layout_name, query_list, pagination_limit)
+            response_iterator = self._client.find_records(database_name, layout_name, query_list, pagination_limit,
+                                                          sort_expression)
 
         count = 1
         for data_page, data_info in response_iterator:
@@ -231,9 +249,13 @@ class Component(ComponentBase):
             writer = self._get_writer_from_cache(table_definition, data_info['table'])
 
             # select max timestamp value to reduce sorting load on FileMaker db.
+            last_row = {}
             for row in data_page:
-                self._store_max_timestamp_value(layout_name, row['fieldData'], fetching_field)
                 writer.writerow(row['fieldData'])
+                if row['fieldData']:
+                    last_row = row['fieldData']
+
+        self._store_max_value(layout_name, last_row, fetching_fields)
 
     def _build_queries(self) -> List[dict]:
         """
