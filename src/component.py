@@ -138,7 +138,7 @@ class Component(ComponentBase):
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):
             self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]] = {}
-        elif not self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]]:
+        elif not self._current_state['previous_run_values'].get(self.configuration.parameters[KEY_LAYOUT_NAME]):
             # fix kbc bug converting obj to array
             self._current_state['previous_run_values'][self.configuration.parameters[KEY_LAYOUT_NAME]] = {}
 
