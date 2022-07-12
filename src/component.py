@@ -141,7 +141,11 @@ class Component(ComponentBase):
         self.write_manifests(result_tables)
 
     def test_connection(self):
-        self._client.get_product_information()
+        try:
+            self._client.get_product_information()
+        except Exception as e:
+            raise UserException(f"The connection cannot be established, "
+                                f"please check your credentials. Detail: {e}") from e
 
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):

@@ -160,11 +160,13 @@ class DataApiClient(HttpClient):
 
     def get_product_information(self) -> dict:
         """
-        To retrieve product information about the host
+        To retrieve product information about the host.
+        Does not retry.
         Returns:
 
         """
-        response = self.get_raw('productInfo', auth=(self._user, self._password), verify=self._ssl_verify)
+        url = self._build_url('productInfo', False)
+        response = requests.get(url, auth=(self._user, self._password), verify=self._ssl_verify)
         self._handle_http_error(response)
         response_data = response.json().get('response', {})
         return response_data
