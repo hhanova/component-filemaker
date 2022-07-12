@@ -120,6 +120,8 @@ class Component(ComponentBase):
 
         params = self.configuration.parameters
 
+        self.test_connection()
+
         if not params.get('ssl_verify', True):
             logging.warning("SSL certificate verification is disabled!")
 
@@ -137,6 +139,9 @@ class Component(ComponentBase):
         self._current_state['table_schemas'] = self._layout_schemas
         self.write_state_file(self._current_state)
         self.write_manifests(result_tables)
+
+    def test_connection(self):
+        self._client.get_product_information()
 
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):
