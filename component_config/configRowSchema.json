@@ -192,6 +192,7 @@
     "page_size": {
       "type": "integer",
       "title": "Page size",
+      "description": "Number of records retrieved in single API call. Note that to large page size may affect load on the destination database",
       "default": 1000,
       "propertyOrder": 60,
       "options": {

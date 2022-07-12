@@ -1,1 +1,1 @@
-FileMaker Extractor short description
+FileMaker is a cross-platform relational database application from Claris International. Sync layouts via Data API.
