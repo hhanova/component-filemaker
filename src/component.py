@@ -12,8 +12,9 @@ from keboola.component.base import ComponentBase
 from keboola.component.dao import TableDefinition
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
-
 # configuration variables
+from requests.exceptions import RequestException
+
 from filemaker.client import DataApiClient, ClientUserError
 
 TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S'
@@ -30,7 +31,7 @@ KEY_FIND_CRITERIA = 'find_criteria'
 
 # list of mandatory parameters => if some is missing,
 # component will fail with readable message on initialization.
-REQUIRED_PARAMETERS = [KEY_PASSWORD, KEY_USERNAME, KEY_DATABASE, KEY_BASEURL, KEY_LAYOUT_NAME]
+REQUIRED_PARAMETERS = [KEY_PASSWORD, KEY_USERNAME, KEY_DATABASE, KEY_BASEURL]
 REQUIRED_IMAGE_PARS = []
 
 
@@ -108,6 +109,7 @@ class Component(ComponentBase):
         if not self._current_state.get('previous_run_values'):
             self._current_state['previous_run_values'] = {}
 
+        self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         # suppress ssl warnings and rather log once
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -118,6 +120,8 @@ class Component(ComponentBase):
 
         params = self.configuration.parameters
 
+        self.test_connection()
+
         if not params.get('ssl_verify', True):
             logging.warning("SSL certificate verification is disabled!")
 
@@ -125,8 +129,9 @@ class Component(ComponentBase):
             self._download_metadata()
         elif params.get('object_type', 'Layout') == 'Layout':
             self._init_state()
-            self.validate_configuration_parameters(REQUIRED_PARAMETERS)
+            self.validate_configuration_parameters(REQUIRED_PARAMETERS + [KEY_LAYOUT_NAME])
             self._download_layout_data()
+
         else:
             raise UserException(f"Invalid object type '{params['object_type']}'!")
 
@@ -134,6 +139,13 @@ class Component(ComponentBase):
         self._current_state['table_schemas'] = self._layout_schemas
         self.write_state_file(self._current_state)
         self.write_manifests(result_tables)
+
+    def test_connection(self):
+        try:
+            self._client.get_product_information()
+        except Exception as e:
+            raise UserException(f"The connection cannot be established, "
+                                f"please check your credentials. Detail: {e}") from e
 
     def _init_state(self):
         if not self._current_state.get('previous_run_values'):
@@ -238,24 +250,31 @@ class Component(ComponentBase):
         else:
             response_iterator = self._client.find_records(database_name, layout_name, query_list, pagination_limit,
                                                           sort_expression)
+        try:
+            count = 1
+            last_row = dict()
+            for data_page, data_info in response_iterator:
+                page_size = len(data_page)
+                logging.info(f'Downloading records {count} - {count + page_size}')
+                count += page_size
+                # this is cached, we do not know table name before first response. Datainfo is same in all parts
+                table_definition = self._build_table_definition(data_info['table'])
+                writer = self._get_writer_from_cache(table_definition, data_info['table'])
 
-        count = 1
-        for data_page, data_info in response_iterator:
-            page_size = len(data_page)
-            logging.info(f'Downloading records {count} - {count + page_size}')
-            count += page_size
-            # this is cached, we do not know table name before first response. Datainfo is same in all parts
-            table_definition = self._build_table_definition(data_info['table'])
-            writer = self._get_writer_from_cache(table_definition, data_info['table'])
+                # select max timestamp value to reduce sorting load on FileMaker db.
+                last_row = {}
+                for row in data_page:
+                    writer.writerow(row['fieldData'])
+                    if row['fieldData']:
+                        last_row = row['fieldData']
 
-            # select max timestamp value to reduce sorting load on FileMaker db.
-            last_row = {}
-            for row in data_page:
-                writer.writerow(row['fieldData'])
-                if row['fieldData']:
-                    last_row = row['fieldData']
+            self._store_max_value(layout_name, last_row, fetching_fields)
 
-        self._store_max_value(layout_name, last_row, fetching_fields)
+        except RequestException as e:
+            raise UserException(e) from e
+
+        except Exception:
+            raise
 
     def _build_queries(self) -> List[dict]:
         """

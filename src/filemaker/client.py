@@ -158,6 +158,19 @@ class DataApiClient(HttpClient):
         response_data = response.json().get('response', {})
         return [record.get('name') for record in response_data['databases']]
 
+    def get_product_information(self) -> dict:
+        """
+        To retrieve product information about the host.
+        Does not retry.
+        Returns:
+
+        """
+        url = self._build_url('productInfo', False)
+        response = requests.get(url, auth=(self._user, self._password), verify=self._ssl_verify)
+        self._handle_http_error(response)
+        response_data = response.json().get('response', {})
+        return response_data
+
     def get_layouts(self, database: str) -> List[dict]:
         """
         Get available layouts for the database
