@@ -218,12 +218,8 @@ class Component(ComponentBase):
             return
 
         for field_name in field_names:
-            last_value = self._current_state.get('previous_run_values', {}).get(
-                layout_name, {}).get(field_name)
-
             current_value = row[field_name]
-            if not last_value or current_value > last_value:
-                self._current_state['previous_run_values'][layout_name][field_name] = current_value
+            self._current_state['previous_run_values'][layout_name][field_name] = current_value
 
     def _download_layout_data(self):
         """
