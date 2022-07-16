@@ -258,12 +258,12 @@ class Component(ComponentBase):
                 writer = self._get_writer_from_cache(table_definition, data_info['table'])
 
                 # select max timestamp value to reduce sorting load on FileMaker db.
-                last_row = {}
                 for row in data_page:
                     writer.writerow(row['fieldData'])
                     if row['fieldData']:
                         last_row = row['fieldData']
 
+            logging.debug(last_row)
             self._store_max_value(layout_name, last_row, fetching_fields)
 
         except RequestException as e:
