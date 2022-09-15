@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Tuple, List, Iterator
 
 import requests
@@ -19,7 +20,7 @@ class DataApiClient(HttpClient):
                  user: str,
                  password: str,
                  ssl_verify: bool = True,
-                 max_retries: int = 3,
+                 max_retries: int = 5,
                  backoff_factor: float = 0.3,
                  status_forcelist: Tuple[int, ...] = (500, 502, 504)) -> None:
         base_url = f'{server_url}/fmi/data/v2/'
@@ -59,8 +60,11 @@ class DataApiClient(HttpClient):
         Returns:
 
         """
-        self.delete(f'databases/{database}/sessions/{session_token}',
-                    verify=self._ssl_verify)
+        try:
+            self.delete(f'databases/{database}/sessions/{session_token}',
+                        verify=self._ssl_verify)
+        except Exception as e:
+            logging.warning(f"Failed to logout from session. {e}")
 
     def find_records(self, database: str, layout: str,
                      query: List[dict], page_size=1000, sort: List[dict] = None) -> Iterator[Tuple[List[dict], dict]]:
