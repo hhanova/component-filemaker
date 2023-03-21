@@ -83,7 +83,7 @@
       "format": "table",
       "title": "Query Group",
       "propertyOrder": 10,
-      "description": "Groups of filter criteria. 'OR' logical operation is applied to each group. 'AND' logical operation is applied to each set of queries. Note that if you include field used for incremental fetching, the incremental fetching will not work as expected.",
+      "description": "Groups of filter criteria. 'OR' logical operation is applied to each group. 'AND' logical operation is applied to each set of queries. Note that if you include field used for incremental fetching, the incremental fetching will not work as expected. One key can be specified only once per (AND) group, see <a href=\"https://fmhelp.filemaker.com/help/18/fmp/en/#page/FMP_Help%2Ffinding-ranges.html%23\"><ocumentation</a>",
       "items": {
         "type": "array",
         "title": "Query Group",

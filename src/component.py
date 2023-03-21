@@ -280,11 +280,21 @@ class Component(ComponentBase):
         """
 
         query_list = list()
+
+        duplicate_keys = set()
         for query_group in self.configuration.parameters[KEY_QUERY]:
             single_query = {}
             for q in query_group:
+                if q[KEY_FIELD_NAME] in single_query:
+                    duplicate_keys.add(q[KEY_FIELD_NAME])
                 single_query[q[KEY_FIELD_NAME]] = q[KEY_FIND_CRITERIA]
             query_list.append(single_query)
+
+        if duplicate_keys:
+            raise UserException(
+                f'Single key can be listed only once in a query group (AND)! Affected keys: {duplicate_keys} '
+                'If you want to define a range filter please refer to the documentation: '
+                'https://fmhelp.filemaker.com/help/18/fmp/en/#page/FMP_Help%2Ffinding-ranges.html%23')
         return query_list
 
     def _download_metadata(self):
