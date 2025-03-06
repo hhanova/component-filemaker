@@ -38,7 +38,7 @@
     },
     "field_metadata": {
       "title": "Field Metadata",
-      "description": "Download schemas of selected layouts. If left empty only list of available databases and layouts is downloaded.",
+      "description": "Downloads schemas of selected layouts. If left empty, only the list of available databases and layouts weill be downloaded.",
       "type": "array",
       "format": "table",
       "options": {
@@ -81,12 +81,12 @@
         }
       },
       "format": "table",
-      "title": "Query Group",
+      "title": "Query group",
       "propertyOrder": 10,
-      "description": "Groups of filter criteria. 'OR' logical operation is applied to each group. 'AND' logical operation is applied to each set of queries. Note that if you include field used for incremental fetching, the incremental fetching will not work as expected. One key can be specified only once per (AND) group, see <a href=\"https://fmhelp.filemaker.com/help/18/fmp/en/#page/FMP_Help%2Ffinding-ranges.html%23\"><ocumentation</a>",
+      "description": "Groups of filter criteria. The 'OR' logical operation is applied to each group, while  the 'AND' logical operation is applied within each set of queries. Note that if you include a field used for incremental fetching, the incremental fetching will not work as expected. Each key can be specified only once per (AND) group. See the <a href=\"https://fmhelp.filemaker.com/help/18/fmp/en/#page/FMP_Help%2Ffinding-ranges.html%23\"><ocumentation</a> for more details.",
       "items": {
         "type": "array",
-        "title": "Query Group",
+        "title": "Query group",
         "minItems": 1,
         "format": "table",
         "propertyOrder": 11,
@@ -95,13 +95,13 @@
           "title": "Query",
           "properties": {
             "field_name": {
-              "title": "Field Name",
+              "title": "Field name",
               "type": "string",
               "propertyOrder": 15
             },
             "find_criteria": {
               "type": "string",
-              "title": "Find Criteria",
+              "title": "Find criteria",
               "options": {
                 "input_width": "450px"
               },
@@ -113,7 +113,7 @@
     },
     "loading_options": {
       "type": "object",
-      "title": "Loading Options",
+      "title": "Loading options",
       "propertyOrder": 100,
       "required": [
         "incremental"
@@ -125,13 +125,13 @@
       },
       "properties": {
         "incremental_fields": {
-          "title": "Incremental Fields",
+          "title": "Incremental fields",
           "description": "List of column names to use for incremental fetching.",
           "maxItems": 1,
           "type": "array",
           "items": {
             "type": "string",
-            "title": "Field Name",
+            "title": "Field name",
             "propertyOrder": 300
           },
           "default": [
@@ -155,7 +155,7 @@
             "Id"
           ],
           "title": "Primary key",
-          "description": "List of the primary key column names.",
+          "description": "List of primary key column names.",
           "propertyOrder": 5000
         },
         "incremental_fetch": {
@@ -163,7 +163,7 @@
           "type": "boolean",
           "format": "checkbox",
           "default": false,
-          "description": "Fetch records that have been updated since the last run of the component with a specified field",
+          "description": "Fetch records that have been updated since the last run of the component, based on the specified field.",
           "propertyOrder": 250,
           "options": {
             "dependencies": {
@@ -179,13 +179,13 @@
           ],
           "options": {
             "enum_titles": [
-              "Full Load",
-              "Incremental Update"
+              "Full load",
+              "Incremental update"
             ]
           },
           "default": 0,
           "title": "Load type",
-          "description": "If set to Incremental update, the result tables will be updated based on primary key and new records will be fetched. Full load overwrites the destination table each time.",
+          "description": "If set to incremental update, the result tables will be updated based on the primary key, and new records will be fetched. Full load overwrites the destination table with each run.",
           "propertyOrder": 200
         }
       }
@@ -193,7 +193,7 @@
     "page_size": {
       "type": "integer",
       "title": "Page size",
-      "description": "Number of records retrieved in single API call. Note that to large page size may affect load on the destination database",
+      "description": "Number of records retrieved in a single API call. Note that a large page size may affect load performance on the destination database.",
       "default": 1000,
       "propertyOrder": 60,
       "options": {
