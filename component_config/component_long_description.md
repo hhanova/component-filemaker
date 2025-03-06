@@ -1,1 +1,1 @@
-Extract layout data from [FileMaker](https://www.claris.com/filemaker/) relational database via [FileMaker Data API](https://help.claris.com/en/data-api-guide/content/write-data-api-calls.html).
+This component extracts layout data from [FileMaker](https://www.claris.com/filemaker/) relational databases using the [FileMaker Data API](https://help.claris.com/en/data-api-guide/content/write-data-api-calls.html).
