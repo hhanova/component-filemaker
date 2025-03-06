@@ -1,2 +1,3 @@
-**NOTE** The columns prefixed `_` are prefixed with `hsh` prefix in the result table. This is because the Keboola Connection Storage does not allow to store columns prefixed with underscore. 
-So the column `_Timestamp` will be stored as `hsh_Timestamp` in the resulting table.
+**Note:** Columns prefixed with `_` are stored with the `hsh_` prefix in the result table.
+This is because Keboola Storage does not allow columns to begin with an underscore.
+For example, the column `_Timestamp` will be stored as `hsh_Timestamp` in the resulting table.
