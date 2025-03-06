@@ -17,7 +17,7 @@
     },
     "username": {
       "type": "string",
-      "title": "User Name",
+      "title": "User name",
       "default": "",
       "minLength": 1,
       "propertyOrder": 10
@@ -35,7 +35,7 @@
       "type": "boolean",
       "format": "checkbox",
       "default": true,
-      "description": "Set to false to disable SSL (https) certificate verification. Use with caution.",
+      "description": "Set to false to disable SSL (HTTPS) certificate verification. Use with caution.",
       "propertyOrder": 30
     }
   }
